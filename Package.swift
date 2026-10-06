@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "CrazyAlarmCore",
+    platforms: [.macOS(.v13), .iOS(.v18)],
     products: [.library(name: "CrazyAlarmCore", targets: ["CrazyAlarmCore"])],
     targets: [
         .target(name: "CrazyAlarmCore", path: "CrazyAlarm", exclude: [
