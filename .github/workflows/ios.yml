@@ -1,0 +1,46 @@
+name: Build CrazyAlarm iOS
+
+on:
+  push:
+    branches: [main, 'codex/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select stable Xcode 26
+        run: |
+          sudo xcode-select -s /Applications/Xcode_26.6.app/Contents/Developer
+          xcodebuild -version
+      - name: Test quiz and schedule logic
+        run: swift test
+      - name: Build iPhone app without a paid signing account
+        run: |
+          xcodebuild -project CrazyAlarm.xcodeproj -scheme CrazyAlarm \
+            -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
+            -archivePath build/CrazyAlarm.xcarchive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO archive
+      - name: Package unsigned IPA for AltStore
+        run: |
+          mkdir -p build/package/Payload
+          cp -R build/CrazyAlarm.xcarchive/Products/Applications/CrazyAlarm.app build/package/Payload/
+          cd build/package
+          zip -qr ../CrazyAlarm-unsigned.ipa Payload
+      - name: Downloadable iPhone installation package
+        uses: actions/upload-artifact@v4
+        with:
+          name: CrazyAlarm-unsigned-IPA
+          path: build/CrazyAlarm-unsigned.ipa
+          retention-days: 7
+          if-no-files-found: error
