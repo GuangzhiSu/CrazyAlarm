@@ -16,14 +16,14 @@
 
 1. **无法保证整个 iOS 上只能答题停止。** Apple 的 AlarmPresentation 会自动提供系统停止入口。App 的题目页面没有关闭按钮，只有两题答对才调用停止；但锁屏的停止、用户音量、电话、强制退出、关机、权限撤销和免费签名失效由系统掌控。背景中不会自动弹出自定义答题页面；请点击系统的「答题起床」。
 2. **QQ 音乐账户尚未接通。** QQ 音乐页明确显示待接入，不展示虚假的登录或歌单。腾讯官方 OpenID Demo 要求 QQ 音乐分配的应用 ID、包名和业务参数，OpenAPI 又使用另一套参数。目前没有这些凭据，也不能从 QQ 音乐 App 沙盒读取会员下载。本版可使用你拥有的未加密本地音频。
-3. **当前交付是源代码，不是已验证的真机成品。** Windows 无法直接运行 Xcode；需要将文件上传到此仓库运行 Actions，或在 Mac 上打开工程编译。务必按下面的真机清单验证后再依赖它起床。
+3. **已通过云端编译，仍需真机验收。** 2026-10-06 使用 Xcode 26.6 完成 iPhone Release archive，13 项 Swift 测试全部通过。IPA 已生成，可侧载安装；锁屏响铃、音乐切换和权限需要在你的手机上按清单验证。
 
 ## 只有 Windows，免费装到自己手机
 
 详见 [Windows 免费安装说明](docs/WINDOWS-INSTALL.md)。简要路线：
 
-1. 把整个工程（含 `.github/workflows/ios.yml`）提交到 `GuangzhiSu/CrazyAlarm` 的 main 分支。
-2. GitHub Actions 使用标准 macOS runner 测试及编译，下载 `CrazyAlarm-unsigned-IPA` 工件并解压，得到 `.ipa`。
+1. 工程已提交到 main，首次成功构建见 [构建结果与 IPA](https://github.com/GuangzhiSu/CrazyAlarm/actions/runs/37540930877)。
+2. 下载 `CrazyAlarm-unsigned-IPA` 工件并解压，得到 `.ipa`。本次交付目录也附有 IPA，无需重新上传源码。以后修改 App 源码，GitHub Actions 会重新测试并生成安装包。
 3. Windows 安装 AltServer / AltStore Classic，按官方说明连接 iPhone、信任开发者并打开开发者模式。
 4. 在 AltStore 中添加该 IPA，由你自己的 Apple 账户签名。**未签名 IPA 不能直接点击安装。**
 5. 免费签名 7 天到期，提前通过 AltServer 刷新。此方式不用上架 App Store，不需要购买 Apple Developer 年费。

@@ -2,16 +2,18 @@
 
 适用于自己的 iPhone 17 Pro Max、iOS 26+、Windows 10/11。无需 App Store 上架，也不需要付费开发者会员。免费签名每 7 天需要刷新。
 
-## 第一步：生成 IPA
+## 第一步：取得 IPA
 
-本交付包是 Xcode 源码工程，不能直接在 iPhone 上安装。已附 GitHub Actions 构建流程。
+本次已完成云端编译，13 项测试全部通过。直接使用交付文件 `CrazyAlarm-unsigned.ipa`，或打开 [本次成功构建](https://github.com/GuangzhiSu/CrazyAlarm/actions/runs/37540930877)，在 Artifacts 下载 `CrazyAlarm-unsigned-IPA` 并解压。未签名 IPA 需要由 AltStore 签名后安装。源码也已推送到仓库，无需重新上传。
+
+### 将来修改源码后，重新生成 IPA
 
 1. 解压 CrazyAlarm 源码包。在 Windows 文件资源管理器打开「显示隐藏的项目」，确认能看到 `.github` 文件夹。
 2. 登录你自己的 GitHub，打开 `https://github.com/GuangzhiSu/CrazyAlarm`。将解压后的文件和文件夹上传至仓库根目录，直接提交到 main。应在根目录看到 `CrazyAlarm.xcodeproj`、`CrazyAlarm`、`Package.swift`、`Tests`、`.github`，不要多套一层 CrazyAlarm 文件夹。
 3. 浏览器上传可将这些文件夹拖到 GitHub 的 Upload files 页面。若 `.github` 隐藏文件夹未成功上传，在仓库中使用 Add file → Create new file，文件名填写 `.github/workflows/ios.yml`，粘贴源码包中同名文件的全部内容并提交。
 4. 打开仓库 Actions → Build CrazyAlarm iOS。提交会触发构建，也可在 main 分支点击 Run workflow。
 5. 等待测试和编译成功（绿色），打开运行详情，在 Artifacts 下载 `CrazyAlarm-unsigned-IPA`。下载可能要求你登录 GitHub。解压 ZIP 后获得 `CrazyAlarm-unsigned.ipa`。
-6. 若变红，请打开失败步骤的日志；不要把失败构建当作已可用安装包。首次编译尚未在交付环境执行，可能需要针对 Xcode SDK 报错调整源代码。
+6. 若变红，请打开失败步骤的日志；不要把失败构建当作已可用安装包。本次源代码已通过 Xcode 26.6 的 Release archive。
 
 使用公开仓库和标准 runner 的构建计算时间免费；不要选择付费 larger runner。安装文件工件保留 7 天。如改为私有仓库，请检查账户免费配额。
 
