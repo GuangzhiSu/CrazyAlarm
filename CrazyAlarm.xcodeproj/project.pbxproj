@@ -6,6 +6,8 @@
  objects = {
 		E3F5B0C7D595A5E679C36F76 /* AlarmScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmScheduler.swift; sourceTree = "<group>"; };
 		256F25BAA576504B5988A98C /* AlarmScheduler.swift-build */ = {isa = PBXBuildFile; fileRef = E3F5B0C7D595A5E679C36F76; };
+		60C51AE74F0E0B6C66C0AE54 /* AlarmTransactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmTransactions.swift; sourceTree = "<group>"; };
+		6F24D5A293DDEDF6F0268C88 /* AlarmTransactions.swift-build */ = {isa = PBXBuildFile; fileRef = 60C51AE74F0E0B6C66C0AE54; };
 		670EFE22E08B52AA6DEDAD2C /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
 		AB0E5D0D8706593ACAFA56D2 /* AppStore.swift-build */ = {isa = PBXBuildFile; fileRef = 670EFE22E08B52AA6DEDAD2C; };
 		9AB3552406E9445901849A13 /* CrazyAlarmApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrazyAlarmApp.swift; sourceTree = "<group>"; };
@@ -28,6 +30,10 @@
 		EC1AF6941CBD6EC957AE5173 /* MusicPlayer.swift-build */ = {isa = PBXBuildFile; fileRef = CA0C0DF687CF6F81F9362C53; };
 		443E382C6FA13E5FF522D921 /* OpenQuizIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenQuizIntent.swift; sourceTree = "<group>"; };
 		8741EB411DFD837E3C6CD5AB /* OpenQuizIntent.swift-build */ = {isa = PBXBuildFile; fileRef = 443E382C6FA13E5FF522D921; };
+		DE04D100C28A65F018FA3C6F /* PermissionRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionRules.swift; sourceTree = "<group>"; };
+		9D9EEACEE40411255257072C /* PermissionRules.swift-build */ = {isa = PBXBuildFile; fileRef = DE04D100C28A65F018FA3C6F; };
+		ECB5B87638B794EA1248927B /* TaskPermissions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskPermissions.swift; sourceTree = "<group>"; };
+		71D034227A1E52D29211D1D7 /* TaskPermissions.swift-build */ = {isa = PBXBuildFile; fileRef = ECB5B87638B794EA1248927B; };
 		A9BCA438417D62B8BB39B2EE /* Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views.swift; sourceTree = "<group>"; };
 		0B4F8FBCFD147F40108B8A55 /* Views.swift-build */ = {isa = PBXBuildFile; fileRef = A9BCA438417D62B8BB39B2EE; };
 		28AAD1477D5182D66D4B03B3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Assets.xcassets"; sourceTree = "<group>"; };
@@ -37,21 +43,21 @@
 		7B594B6DB375E1BF3F23CDD6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		963E3E45F4B770ECDCB2D76A /* CrazyAlarm.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CrazyAlarm.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2EB2D8158FC6EF9EB19CB439 /* MainGroup */ = {isa = PBXGroup; children = (A7D8CE70846932FEE851CAD6, FE0A091FDBFB3E9C31B7A1BD,); sourceTree = "<group>"; };
-		A7D8CE70846932FEE851CAD6 /* AppGroup */ = {isa = PBXGroup; children = (E3F5B0C7D595A5E679C36F76, 670EFE22E08B52AA6DEDAD2C, 9AB3552406E9445901849A13, 7791185DF3630514842CD5C1, 30E8A747E897C21D4B2555A1, 37292C219DD5C1487ABB42AC, 8ABC8B007E92E97306932F8C, 1EC694BDAACC93D351729EA6, 47774B5A905138560EFC7B56, 8BF4A28E43F6CF370D3EE1C2, CA0C0DF687CF6F81F9362C53, 443E382C6FA13E5FF522D921, A9BCA438417D62B8BB39B2EE, 28AAD1477D5182D66D4B03B3, 199C0BB5F490F1FA08C2FF1F, 7B594B6DB375E1BF3F23CDD6,); path = CrazyAlarm; sourceTree = "<group>"; };
+		A7D8CE70846932FEE851CAD6 /* AppGroup */ = {isa = PBXGroup; children = (E3F5B0C7D595A5E679C36F76, 60C51AE74F0E0B6C66C0AE54, 670EFE22E08B52AA6DEDAD2C, 9AB3552406E9445901849A13, 7791185DF3630514842CD5C1, 30E8A747E897C21D4B2555A1, 37292C219DD5C1487ABB42AC, 8ABC8B007E92E97306932F8C, 1EC694BDAACC93D351729EA6, 47774B5A905138560EFC7B56, 8BF4A28E43F6CF370D3EE1C2, CA0C0DF687CF6F81F9362C53, 443E382C6FA13E5FF522D921, DE04D100C28A65F018FA3C6F, ECB5B87638B794EA1248927B, A9BCA438417D62B8BB39B2EE, 28AAD1477D5182D66D4B03B3, 199C0BB5F490F1FA08C2FF1F, 7B594B6DB375E1BF3F23CDD6,); path = CrazyAlarm; sourceTree = "<group>"; };
 		FE0A091FDBFB3E9C31B7A1BD /* Products */ = {isa = PBXGroup; children = (963E3E45F4B770ECDCB2D76A,); name = Products; sourceTree = "<group>"; };
-		2EB56BE3C2D93CDAB0C52E67 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (256F25BAA576504B5988A98C, AB0E5D0D8706593ACAFA56D2, 39A33817DBEB382C64C4B602, 667DEF3BD407049B34DEEF03, B598B33B9C7CD9BEB5220D4D, B6240657A74E26652E13783C, 615B33A359611CA17DA922F1, 845F782B28EF4B1D70BF4357, A97BD4DB8D692AF8CED89A3D, 5D19452EA34B49EF43360D88, EC1AF6941CBD6EC957AE5173, 8741EB411DFD837E3C6CD5AB, 0B4F8FBCFD147F40108B8A55,); runOnlyForDeploymentPostprocessing = 0; };
+		2EB56BE3C2D93CDAB0C52E67 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (256F25BAA576504B5988A98C, 6F24D5A293DDEDF6F0268C88, AB0E5D0D8706593ACAFA56D2, 39A33817DBEB382C64C4B602, 667DEF3BD407049B34DEEF03, B598B33B9C7CD9BEB5220D4D, B6240657A74E26652E13783C, 615B33A359611CA17DA922F1, 845F782B28EF4B1D70BF4357, A97BD4DB8D692AF8CED89A3D, 5D19452EA34B49EF43360D88, EC1AF6941CBD6EC957AE5173, 8741EB411DFD837E3C6CD5AB, 9D9EEACEE40411255257072C, 71D034227A1E52D29211D1D7, 0B4F8FBCFD147F40108B8A55,); runOnlyForDeploymentPostprocessing = 0; };
 		87DF60DE337FB58864343E39 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A0CA4E1758823471A02FE2F1, C4F0C285DA65DF200C085B2E,); runOnlyForDeploymentPostprocessing = 0; };
 		AF39DD055C3EF8226FBE929D /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 		BFD315016DE16320F7E2120C /* ProjectDebug */ = {isa = XCBuildConfiguration; buildSettings = { CLANG_ENABLE_MODULES = YES; SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 26.0; SWIFT_VERSION = 5.0; }; name = Debug; };
 		3A77CD648711364E9A877D62 /* AppDebug */ = {isa = XCBuildConfiguration; buildSettings = {
         ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
         CODE_SIGN_STYLE = Automatic;
-        CURRENT_PROJECT_VERSION = 2;
+        CURRENT_PROJECT_VERSION = 3;
         GENERATE_INFOPLIST_FILE = NO;
         INFOPLIST_FILE = CrazyAlarm/Info.plist;
         IPHONEOS_DEPLOYMENT_TARGET = 26.0;
         LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-        MARKETING_VERSION = 1.1;
+        MARKETING_VERSION = 1.1.1;
         PRODUCT_BUNDLE_IDENTIFIER = com.guangzhisu.CrazyAlarm;
         PRODUCT_NAME = "$(TARGET_NAME)";
         SDKROOT = iphoneos;
@@ -65,12 +71,12 @@
 		066776A1C212750E8BE506A2 /* AppRelease */ = {isa = XCBuildConfiguration; buildSettings = {
         ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
         CODE_SIGN_STYLE = Automatic;
-        CURRENT_PROJECT_VERSION = 2;
+        CURRENT_PROJECT_VERSION = 3;
         GENERATE_INFOPLIST_FILE = NO;
         INFOPLIST_FILE = CrazyAlarm/Info.plist;
         IPHONEOS_DEPLOYMENT_TARGET = 26.0;
         LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-        MARKETING_VERSION = 1.1;
+        MARKETING_VERSION = 1.1.1;
         PRODUCT_BUNDLE_IDENTIFIER = com.guangzhisu.CrazyAlarm;
         PRODUCT_NAME = "$(TARGET_NAME)";
         SDKROOT = iphoneos;

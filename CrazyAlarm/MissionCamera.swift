@@ -77,6 +77,9 @@ final class CameraSessionOwner: @unchecked Sendable {
     func start() {
         queue.async { [self] in
             guard !stopped else { return }
+            guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else {
+                fail("相机权限未开启，请在系统设置中允许 CrazyAlarm。"); return
+            }
             session.beginConfiguration(); session.sessionPreset = .high
             let position: AVCaptureDevice.Position = mode == .squat ? .front : .back
             guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: position),

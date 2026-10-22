@@ -6,8 +6,8 @@
     <key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
     <key>CFBundleExecutable</key><string>$(EXECUTABLE_NAME)</string>
     <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>1.1</string>
-    <key>CFBundleVersion</key><string>2</string>
+    <key>CFBundleShortVersionString</key><string>1.1.1</string>
+    <key>CFBundleVersion</key><string>3</string>
     <key>LSRequiresIPhoneOS</key><true/>
     <key>NSAlarmKitUsageDescription</key><string>CrazyAlarm 需要设置系统闹钟，在锁屏时提醒你起床并打开起床任务。</string>
     <key>NSCameraUsageDescription</key><string>用于扫描绑定条码、拍摄任务参考照片、识别指定物品及计数深蹲；图像在本机处理。</string>

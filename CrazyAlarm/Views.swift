@@ -124,12 +124,13 @@ struct AlarmHomeView: View {
                             .disabled(store.isBusy).padding(.horizontal, 24).padding(.vertical, 12).background(Theme.background)
                     }
                     .sheet(item: $editingAlarm) { AlarmEditorView(store: store, draft: $0) }
-                    .sheet(isPresented: $showsSettings) { SettingsView() }
+                    .sheet(isPresented: $showsSettings) { SettingsView(store: store) }
                 }
             }
         }
         .background(Theme.background)
         .alert("CrazyAlarm", isPresented: Binding(get: { store.errorMessage != nil }, set: { if !$0 { store.errorMessage = nil } })) {
+            if store.offersSystemSettings { Button("打开系统设置") { DevicePermissionCenter.openSettings() } }
             Button("知道了") { store.errorMessage = nil }
         } message: { Text(store.errorMessage ?? "") }
     }
@@ -141,6 +142,7 @@ struct AlarmEditorView: View {
     @State private var showsQuizEditor = false
     @State private var showsMusic = false
     @State private var localError: String?
+    @State private var localErrorOffersSettings = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -231,16 +233,18 @@ struct AlarmEditorView: View {
                             }
                         }.buttonStyle(.plain).foregroundStyle(.white)
                     }
+                    Card { MissionPermissionPanel(missions: draft.missions) }
                     Toggle("保存后启用", isOn: $draft.isEnabled).tint(Theme.cyan)
                     Text("iOS 系统仍提供停止入口。任务规则适用于 App 内播放，无法阻止强制退出、关机或撤销权限。")
                         .font(.caption).foregroundStyle(Theme.secondary).lineSpacing(4)
                 }.padding(.horizontal, 24).padding(.bottom, 20)
             }
             .background(Theme.background)
+            .disabled(store.isBusy)
             .navigationTitle("Wake-up alarm").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button { dismiss() } label: { Image(systemName: "xmark") }.accessibilityLabel("取消编辑")
+                    Button { dismiss() } label: { Image(systemName: "xmark") }.accessibilityLabel("取消编辑").disabled(store.isBusy)
                 }
             }
             .safeAreaInset(edge: .bottom) {
@@ -249,13 +253,18 @@ struct AlarmEditorView: View {
                         draft.title = draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
                         if draft.title.isEmpty { draft.title = "Wake up early" }
                         if await store.save(draft) { dismiss() }
-                        else { localError = store.errorMessage; store.errorMessage = nil }
+                        else {
+                            localError = store.errorMessage
+                            localErrorOffersSettings = store.offersSystemSettings
+                            store.errorMessage = nil
+                        }
                     }
                 }.padding(.horizontal, 24).padding(.vertical, 12).background(Theme.background)
             }
             .sheet(isPresented: $showsQuizEditor) { MissionEditorView(missions: $draft.missions, questions: $draft.questions) }
             .sheet(isPresented: $showsMusic) { SoundPickerView(sound: $draft.sound) }
             .alert("未能保存", isPresented: Binding(get: { localError != nil }, set: { if !$0 { localError = nil } })) {
+                if localErrorOffersSettings { Button("打开系统设置") { DevicePermissionCenter.openSettings() } }
                 Button("知道了") { localError = nil }
             } message: { Text(localError ?? "") }
         }.interactiveDismissDisabled(store.isBusy)
@@ -364,12 +373,14 @@ struct SoundPickerView: View {
 }
 
 struct SettingsView: View {
+    @Bindable var store: AppStore
     @Environment(\.dismiss) private var dismiss
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     Text("CrazyAlarm").font(.largeTitle.weight(.bold))
+                    Card { MissionPermissionPanel(missions: store.alarms.flatMap(\.missions), showAll: true) }
                     Card {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("先试一次，再设明天的闹钟").font(.headline)
@@ -395,7 +406,7 @@ struct SettingsView: View {
                                 .foregroundStyle(Theme.cyan)
                         }
                     }
-                    Text("题目、条码、参考照片和音乐保存在手机上。图像与语音在本机识别。卸载 App 会删除数据。\n版本 1.1 · 组合起床任务")
+                    Text("题目、条码、参考照片和音乐保存在手机上。图像与语音在本机识别。卸载 App 会删除数据。\n版本 1.1.1 · 任务授权与闹钟更新修复")
                         .font(.caption).foregroundStyle(Theme.secondary)
                 }.padding(24)
             }.background(Theme.background)

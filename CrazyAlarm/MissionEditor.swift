@@ -161,7 +161,7 @@ struct MissionConfigurationView: View {
                 case .squat:
                     Section { Text("把手机竖直放稳，让全身入镜；身体稍向侧面以便看清膝盖弯曲。先站直，再下蹲并站回，才计一次。请量力设置次数。").font(.callout) }
                 }
-                Section { Text("启用前建议试响一次，为相机、麦克风、语音和运动授权并确认识别适合你的环境。").font(.footnote).foregroundStyle(.secondary) }
+                Section { MissionPermissionPanel(missions: [mission], includeAlarms: false) }
             }
             .navigationTitle(mission.kind.title).navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) {
@@ -202,9 +202,8 @@ struct MissionConfigurationView: View {
     }
     private func requestCamera(photo: Bool) {
         Task { @MainActor in
-            guard UIImagePickerController.isSourceTypeAvailable(.camera), await AVCaptureDevice.requestAccess(for: .video) else {
-                error = "请在设置 → App → CrazyAlarm 中允许相机。"; return
-            }
+            do { try await DevicePermissionCenter.shared.ensurePermissions([.camera]) }
+            catch { error = error.localizedDescription; return }
             if photo { cameraPhoto = true } else { cameraBarcode = true }
         }
     }

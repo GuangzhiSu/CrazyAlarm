@@ -5,7 +5,7 @@ import SwiftUI
 struct CrazyAlarmMetadata: AlarmMetadata { var alarmID: String }
 
 @MainActor
-final class AlarmScheduler {
+final class AlarmScheduler: AlarmSchedulingBackend {
     let manager = AlarmManager.shared
 
     func authorize() async throws {
@@ -14,7 +14,12 @@ final class AlarmScheduler {
         guard state == .authorized else { throw SchedulingError.permissionDenied }
     }
 
-    func schedule(_ alarm: AlarmRecord) async throws {
+    func state(of id: UUID) throws -> RegisteredAlarmState? {
+        guard let alarm = try manager.alarms.first(where: { $0.id == id }) else { return nil }
+        return alarm.state == .alerting ? .alerting : .scheduled
+    }
+
+    func register(_ alarm: AlarmRecord) async throws {
         try alarm.validate()
         try await authorize()
         let weekdays: [Locale.Weekday] = alarm.weekdays.sorted(by: { $0.rawValue < $1.rawValue }).map {
@@ -56,6 +61,18 @@ final class AlarmScheduler {
 
     func stopIfAlerting(_ id: UUID) throws {
         if try manager.alarms.contains(where: { $0.id == id && $0.state == .alerting }) { try manager.stop(id: id) }
+    }
+
+    static func describe(_ error: Error) -> String {
+        if error is PermissionProblem || error is AlarmUpdateFailure { return error.localizedDescription }
+        let detail = error as NSError
+        if let alarmError = error as? AlarmManager.AlarmError, alarmError == .maximumLimitReached {
+            return "系统报告已达到闹钟登记上限，请关闭不需要的闹钟后重试。本次修改未保存。\n\(detail.domain) · \(detail.code)"
+        }
+        if detail.domain.contains("AlarmKit") {
+            return "系统暂时无法保存闹钟，请稍后重试。本次修改未保存。\n\(detail.domain) · \(detail.code)"
+        }
+        return error.localizedDescription
     }
 }
 

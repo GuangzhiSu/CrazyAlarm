@@ -2,6 +2,13 @@
 
 A native SwiftUI alarm app for iPhone, targeting iOS 26+ and iPhone 17 Pro Max. The interface features a dark background, cyan mission cards, and a red save button.
 
+## Version 1.1.1: Permission Checks and Reliable Alarm Updates
+
+- Editing only missions or quiz answers preserves an existing system alarm instead of scheduling the same ID again. Time, recurrence, title, and sound changes replace that alarm, with rollback if scheduling or saving fails.
+- Before enabling an alarm, the app requests and verifies only the permissions required by its selected missions. Camera tasks require camera access; speech requires microphone and speech recognition access; step counting requires Motion & Fitness access. Shaking checks raw motion sensor availability and does not request step-history access.
+- Alarm editing, mission configuration, and app settings show permission status. Previously denied permissions link to iOS Settings. Runtime checks remain in place if access changes later.
+- Quiz, typing, math, symbol, and color tasks do not request sensor permissions. Reference photos stay in the app's storage and do not require Photo Library access.
+
 ## Version 1.1: Combine Your Wake-Up Missions
 
 Choose and reorder missions for each alarm. Complete every selected mission in order to stop the music playing inside the app. The original two-question quiz remains available, and existing alarms and unfinished quiz progress migrate to the new version.
@@ -45,7 +52,7 @@ xcodebuild -project CrazyAlarm.xcodeproj -scheme CrazyAlarm -sdk iphoneos \
   -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO build
 ```
 
-The Swift package contains 25 logic tests covering mission ordering, migration of existing data, restoration of progress and random questions, exact barcode matching, question correctness, shake and squat debouncing, speech timing, quizzes, scheduling, and daylight saving time. Camera, microphone, and motion recognition accuracy require testing on a physical device; logic tests cannot replace that validation.
+The Swift package contains 40 logic tests covering mission ordering, migration of existing data, restoration of progress and random questions, exact barcode matching, question correctness, shake and squat debouncing, speech timing, quizzes, scheduling, daylight saving time, alarm replacement and rollback, and permission preflight. Camera, microphone, and motion recognition accuracy require testing on a physical device; logic tests cannot replace that validation.
 
 Version 1.0 installation, Lock Screen ringing, stopping music after two correct answers, and wireless refreshing were verified by the user on an iPhone 17 Pro Max. The new sensor-based missions in version 1.1 still require individual validation after updating.
 

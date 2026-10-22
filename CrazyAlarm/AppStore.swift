@@ -37,6 +37,7 @@ final class AppStore {
     private(set) var isBusy = false
     private(set) var isAuthorized = false
     var errorMessage: String?
+    var offersSystemSettings = false
     var notice: String?
     private var queue: [AlarmRecord] = []
     private let scheduler = AlarmScheduler()
@@ -122,6 +123,7 @@ final class AppStore {
     func save(_ alarm: AlarmRecord) async -> Bool {
         guard !isBusy, challenge == nil else { return false }
         isBusy = true; defer { isBusy = false }
+        offersSystemSettings = false
         let previous = alarms.first(where: { $0.id == alarm.id })
         do {
             try alarm.validate()
@@ -137,21 +139,29 @@ final class AppStore {
                 }
             }
             guard !persistenceLocked else { throw StoreError.unreadable }
-            if alarm.isEnabled { try await scheduler.schedule(alarm) }
-            else { try scheduler.cancel(alarm.id) }
+            if alarm.isEnabled { try await DevicePermissionCenter.shared.ensure(missions: alarm.missions) }
+            guard challenge == nil else { throw AlarmUpdateFailure.currentlyRinging }
             var updated = alarms
             if let index = updated.firstIndex(where: { $0.id == alarm.id }) { updated[index] = alarm }
             else { updated.append(alarm) }
-            do { try persist(alarms: updated, challenge: nil, queue: queue) }
-            catch { await restoreSchedule(previous, id: alarm.id); throw error }
+            try await AlarmUpdateTransaction.perform(alarm, previous: previous, backend: scheduler) {
+                guard self.challenge == nil else { throw AlarmUpdateFailure.currentlyRinging }
+                try self.persist(alarms: updated, challenge: nil, queue: self.queue)
+            }
             alarms = updated; isAuthorized = scheduler.manager.authorizationState == .authorized
             return true
-        } catch { errorMessage = error.localizedDescription; return false }
+        } catch {
+            offersSystemSettings = (error as? PermissionProblem)?.needsSettings == true
+            errorMessage = AlarmScheduler.describe(error)
+            return false
+        }
     }
 
     private func restoreSchedule(_ previous: AlarmRecord?, id: UUID) async {
         do {
-            if let previous, previous.isEnabled { try await scheduler.schedule(previous) }
+            if let previous, previous.isEnabled {
+                try await AlarmUpdateTransaction.perform(previous, previous: previous, backend: scheduler, commit: {})
+            }
             else { try scheduler.cancel(id) }
         } catch { notice = "保存失败后无法恢复原闹钟，请检查闹钟开关并重新保存。" }
     }

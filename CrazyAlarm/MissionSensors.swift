@@ -14,9 +14,12 @@ final class MotionMissionController {
     private var previousSteps = 0
     private var shakes = ShakeCounter()
 
-    func start(_ mission: WakeMission, onUnits: @escaping (Int) -> Void) {
+    func start(_ mission: WakeMission, onUnits: @escaping (Int) -> Void) async {
         stop()
         let token = UUID(); generation = token
+        do { try await DevicePermissionCenter.shared.ensure(missions: [mission], includeAlarms: false) }
+        catch { message = error.localizedDescription; return }
+        guard generation == token else { return }
         if mission.kind == .steps {
             guard CMPedometer.isStepCountingAvailable() else { message = "此设备不支持计步。"; return }
             guard ![CMAuthorizationStatus.denied, .restricted].contains(CMPedometer.authorizationStatus()) else {
@@ -78,16 +81,9 @@ final class SpeechMissionController {
                onBeat: @escaping () -> Void) async {
         stop()
         let token = UUID(); generation = token
-        let speechAllowed = await withCheckedContinuation { continuation in
-            SFSpeechRecognizer.requestAuthorization { continuation.resume(returning: $0 == .authorized) }
-        }
-        let micAllowed = await withCheckedContinuation { continuation in
-            AVAudioSession.sharedInstance().requestRecordPermission { continuation.resume(returning: $0) }
-        }
+        do { try await DevicePermissionCenter.shared.ensure(missions: [mission], includeAlarms: false) }
+        catch { message = error.localizedDescription; return }
         guard generation == token else { return }
-        guard speechAllowed && micAllowed else {
-            message = "请在设置中允许麦克风和语音识别，然后点开始重试。"; return
-        }
         guard let recognizer = SFSpeechRecognizer(locale: Locale(identifier: mission.speechLocale)),
               recognizer.isAvailable, recognizer.supportsOnDeviceRecognition else {
             message = "此语言的本机语音识别暂不可用。请在系统中准备该语言的语音资源，或在任务设置中换一种语言。"; return

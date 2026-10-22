@@ -188,14 +188,15 @@ private struct MissionActivePanel: View {
     }
     private func startMotion() {
         wantsTracking = true
-        motion.start(mission) { count in store.recordEvidence(missionID: mission.id, kind: mission.kind, count: count) }
+        Task { @MainActor in
+            await motion.start(mission) { count in store.recordEvidence(missionID: mission.id, kind: mission.kind, count: count) }
+        }
     }
     private func requestCamera(_ kind: MissionKind) {
         let token = attempt
         Task { @MainActor in
-            guard UIImagePickerController.isSourceTypeAvailable(.camera), await AVCaptureDevice.requestAccess(for: .video) else {
-                feedback = "请在设置 → App → CrazyAlarm 中允许相机。"; return
-            }
+            do { try await DevicePermissionCenter.shared.ensurePermissions([.camera]) }
+            catch { feedback = error.localizedDescription; return }
             guard attempt == token, store.challenge?.session.current?.id == mission.id else { return }
             if kind == .squat { poseCamera = true }
             else if kind == .barcode { showBarcode = true }
