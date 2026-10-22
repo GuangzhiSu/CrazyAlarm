@@ -84,7 +84,7 @@ final class CameraSessionOwner: @unchecked Sendable {
             let position: AVCaptureDevice.Position = mode == .squat ? .front : .back
             guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: position),
                   let input = try? AVCaptureDeviceInput(device: device), session.canAddInput(input) else {
-                session.commitConfiguration(); fail("无法打开相机，请在设置中允许相机访问。"); return
+                session.commitConfiguration(); fail("相机暂时无法打开，请结束通话或其他相机使用后重试。"); return
             }
             session.addInput(input)
             let output = AVCaptureVideoDataOutput()

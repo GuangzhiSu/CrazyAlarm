@@ -203,7 +203,7 @@ struct MissionConfigurationView: View {
     private func requestCamera(photo: Bool) {
         Task { @MainActor in
             do { try await DevicePermissionCenter.shared.ensurePermissions([.camera]) }
-            catch { error = error.localizedDescription; return }
+            catch { self.error = error.localizedDescription; return }
             if photo { cameraPhoto = true } else { cameraBarcode = true }
         }
     }

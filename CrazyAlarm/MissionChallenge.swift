@@ -38,6 +38,7 @@ private struct MissionActivePanel: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var answer = ""
     @State private var feedback = ""
+    @State private var needsSettings = false
     @State private var working = false
     @State private var showPhoto = false
     @State private var showBarcode = false
@@ -125,6 +126,10 @@ private struct MissionActivePanel: View {
                 }
             }
             if !feedback.isEmpty { Text(feedback).font(.callout).foregroundStyle(Theme.coral).accessibilityAddTraits(.updatesFrequently) }
+            if needsSettings || motion.needsSettings || speech.needsSettings {
+                Button("打开系统设置，恢复任务权限", systemImage: "gearshape") { DevicePermissionCenter.openSettings() }
+                    .foregroundStyle(Theme.cyan)
+            }
         }
         .sheet(isPresented: $showPhoto) { TakeMissionPhoto { analyze($0) }.ignoresSafeArea() }
         .sheet(isPresented: $showBarcode) {
@@ -195,8 +200,9 @@ private struct MissionActivePanel: View {
     private func requestCamera(_ kind: MissionKind) {
         let token = attempt
         Task { @MainActor in
+            needsSettings = false
             do { try await DevicePermissionCenter.shared.ensurePermissions([.camera]) }
-            catch { feedback = error.localizedDescription; return }
+            catch { feedback = error.localizedDescription; needsSettings = (error as? PermissionProblem)?.needsSettings == true; return }
             guard attempt == token, store.challenge?.session.current?.id == mission.id else { return }
             if kind == .squat { poseCamera = true }
             else if kind == .barcode { showBarcode = true }

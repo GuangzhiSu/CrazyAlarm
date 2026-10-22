@@ -7,6 +7,7 @@ import Speech
 @MainActor @Observable
 final class MotionMissionController {
     var message = "准备开始"
+    var needsSettings = false
     var isRunning = false
     private let pedometer = CMPedometer()
     private let motion = CMMotionManager()
@@ -17,8 +18,9 @@ final class MotionMissionController {
     func start(_ mission: WakeMission, onUnits: @escaping (Int) -> Void) async {
         stop()
         let token = UUID(); generation = token
+        needsSettings = false
         do { try await DevicePermissionCenter.shared.ensure(missions: [mission], includeAlarms: false) }
-        catch { message = error.localizedDescription; return }
+        catch { message = error.localizedDescription; needsSettings = (error as? PermissionProblem)?.needsSettings == true; return }
         guard generation == token else { return }
         if mission.kind == .steps {
             guard CMPedometer.isStepCountingAvailable() else { message = "此设备不支持计步。"; return }
@@ -65,6 +67,7 @@ final class MotionMissionController {
 @MainActor @Observable
 final class SpeechMissionController {
     var isRunning = false
+    var needsSettings = false
     var message = "先听 / 看三拍准备，再跟着亮起的节拍说词语。"
     var transcript = ""
     var startedAt = Date()
@@ -81,8 +84,9 @@ final class SpeechMissionController {
                onBeat: @escaping () -> Void) async {
         stop()
         let token = UUID(); generation = token
+        needsSettings = false
         do { try await DevicePermissionCenter.shared.ensure(missions: [mission], includeAlarms: false) }
-        catch { message = error.localizedDescription; return }
+        catch { message = error.localizedDescription; needsSettings = (error as? PermissionProblem)?.needsSettings == true; return }
         guard generation == token else { return }
         guard let recognizer = SFSpeechRecognizer(locale: Locale(identifier: mission.speechLocale)),
               recognizer.isAvailable, recognizer.supportsOnDeviceRecognition else {
