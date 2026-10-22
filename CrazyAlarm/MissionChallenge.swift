@@ -139,7 +139,11 @@ private struct MissionActivePanel: View {
         }
         .onDisappear { attempt = UUID(); motion.stop(); speech.stop(); poseCamera = false }
         .onChange(of: scenePhase) { _, phase in
-            if phase != .active { motion.stop(); speech.stop(); squatCounter = SquatCounter() }
+            if phase != .active {
+                motion.stop()
+                if speech.isRunning { speech.stop() }
+                squatCounter = SquatCounter()
+            }
             else if wantsTracking && (mission.kind == .steps || mission.kind == .shake) { startMotion() }
         }
     }
