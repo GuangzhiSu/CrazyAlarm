@@ -80,6 +80,7 @@ struct AlarmRecord: Codable, Equatable, Identifiable, Sendable {
     var sound = AlarmSound.builtIn
     var questions = [QuizQuestion(prompt: "12 + 9 = ?", answer: "21"),
                      QuizQuestion(prompt: "8 × 7 = ?", answer: "56")]
+    var missions = [WakeMission(kind: .quiz)]
 
     var timeText: String { String(format: "%02d:%02d", hour, minute) }
     var repeatText: String {
@@ -90,7 +91,7 @@ struct AlarmRecord: Codable, Equatable, Identifiable, Sendable {
 
     func validate() throws {
         guard (0...23).contains(hour), (0...59).contains(minute) else { throw AlarmValidationError.invalidTime }
-        _ = try QuizSession(alarmID: id, questions: questions)
+        _ = try MissionSession(missions: missions, questions: questions)
     }
 
     func nextFireDate(after now: Date = .now, calendar: Calendar = .current) -> Date? {
@@ -103,5 +104,24 @@ struct AlarmRecord: Codable, Equatable, Identifiable, Sendable {
             calendar.nextDate(after: now, matching: DateComponents(hour: hour, minute: minute, weekday: day.rawValue),
                               matchingPolicy: .nextTime, repeatedTimePolicy: .first)
         }.min()
+    }
+}
+
+extension AlarmRecord {
+    private enum CodingKeys: String, CodingKey {
+        case id, title, hour, minute, weekdays, isEnabled, sound, questions, missions
+    }
+    init(from decoder: Decoder) throws {
+        self.init()
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decode(UUID.self, forKey: .id)
+        title = try values.decode(String.self, forKey: .title)
+        hour = try values.decode(Int.self, forKey: .hour)
+        minute = try values.decode(Int.self, forKey: .minute)
+        weekdays = try values.decode(Set<Weekday>.self, forKey: .weekdays)
+        isEnabled = try values.decode(Bool.self, forKey: .isEnabled)
+        sound = try values.decode(AlarmSound.self, forKey: .sound)
+        questions = try values.decode([QuizQuestion].self, forKey: .questions)
+        missions = try values.decodeIfPresent([WakeMission].self, forKey: .missions) ?? [WakeMission(kind: .quiz)]
     }
 }

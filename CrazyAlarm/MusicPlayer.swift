@@ -52,6 +52,21 @@ final class MusicPlayer {
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
+    /// Keep the alarm looping while allowing microphone input and echo cancellation.
+    func setListening(_ listening: Bool) throws {
+        guard isRinging else { return }
+        let session = AVAudioSession.sharedInstance()
+        if listening {
+            try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.defaultToSpeaker])
+            player?.volume = 0.12
+        } else {
+            try session.setCategory(.playback, mode: .default, options: [])
+            player?.volume = 1
+        }
+        try session.setActive(true)
+        player?.play()
+    }
+
     /// Copy owned audio into the sandbox and create a short PCM CAF clip for AlarmKit.
     /// The full song is used during the quiz; system alerts use the first 28 seconds.
     static func importAudio(_ source: URL) throws -> AlarmSound {

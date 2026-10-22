@@ -30,7 +30,7 @@ final class AlarmScheduler {
         }
         let recurrence: Alarm.Schedule.Relative.Recurrence = weekdays.isEmpty ? .never : .weekly(weekdays)
         let schedule = Alarm.Schedule.relative(.init(time: .init(hour: alarm.hour, minute: alarm.minute), repeats: recurrence))
-        let button = AlarmButton(text: "答题起床", textColor: .white, systemImageName: "brain.head.profile")
+        let button = AlarmButton(text: "完成任务", textColor: .white, systemImageName: "brain.head.profile")
         let alert: AlarmPresentation.Alert
         if #available(iOS 26.1, *) {
             alert = AlarmPresentation.Alert(title: LocalizedStringResource(stringLiteral: alarm.title),

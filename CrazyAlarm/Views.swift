@@ -42,7 +42,7 @@ struct AlarmHomeView: View {
     var body: some View {
         Group {
             if store.challenge != nil {
-                QuizView(store: store)
+                MissionChallengeView(store: store)
             } else {
                 NavigationStack {
                     ScrollView {
@@ -61,7 +61,7 @@ struct AlarmHomeView: View {
 
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("先唤醒大脑，\n再关掉闹钟。").font(.system(.title, design: .rounded, weight: .semibold))
-                                Text("两道题 · 一次清醒的开始").foregroundStyle(Theme.secondary)
+                                Text("自由组合任务 · 一次清醒的开始").foregroundStyle(Theme.secondary)
                             }
                             if !store.isAuthorized {
                                 Label("首次启用时，请允许闹钟权限。", systemImage: "bell.badge")
@@ -96,7 +96,7 @@ struct AlarmHomeView: View {
                                         HStack {
                                             Text(alarm.repeatText).font(.footnote).foregroundStyle(Theme.secondary)
                                             Spacer()
-                                            Label("2 道 Quiz", systemImage: "brain.head.profile").font(.footnote).foregroundStyle(Theme.cyan)
+                                            Label("\(alarm.missions.count) 种任务", systemImage: "checklist").font(.footnote).foregroundStyle(Theme.cyan)
                                         }
                                         Divider().overlay(.white.opacity(0.06))
                                         HStack {
@@ -104,7 +104,7 @@ struct AlarmHomeView: View {
                                             Spacer()
                                             Button("试响") { store.begin(alarm, preview: true) }
                                                 .font(.callout.weight(.semibold)).foregroundStyle(Theme.cyan)
-                                                .padding(.vertical, 8).accessibilityHint("音乐开始后需要答对两题才能停止")
+                                                .padding(.vertical, 8).accessibilityHint("音乐开始后需要完成所有任务才能停止")
                                         }
                                     }
                                 }
@@ -113,7 +113,7 @@ struct AlarmHomeView: View {
                                     Button("删除闹钟", systemImage: "trash", role: .destructive) { Task { await store.delete(alarm) } }
                                 }
                             }
-                            Text("锁屏提醒由 iOS 提供；进入 App 后，答对两题才结束音乐。")
+                            Text("锁屏提醒由 iOS 提供；进入 App 后，完成全部任务才结束音乐。")
                                 .font(.caption).foregroundStyle(Theme.secondary).lineSpacing(4)
                         }.padding(.horizontal, 24).padding(.bottom, 20)
                     }
@@ -195,20 +195,22 @@ struct AlarmEditorView: View {
                     }
                     Button { showsQuizEditor = true } label: {
                         Card {
-                            VStack(alignment: .leading, spacing: 22) {
-                                HStack { Text("Mission").font(.title3); Spacer(); Text("2 / 2").foregroundStyle(Theme.cyan) }
-                                HStack(spacing: 12) {
-                                    ForEach(Array(draft.questions.enumerated()), id: \.element.id) { index, question in
-                                        VStack(alignment: .leading, spacing: 12) {
-                                            Image(systemName: "brain.head.profile").font(.title2)
-                                            Text("Quiz \(index + 1)").font(.caption.weight(.semibold))
-                                            Text(question.prompt.isEmpty ? "添加题目" : question.prompt).font(.caption).lineLimit(2)
-                                        }.foregroundStyle(Theme.cyan).padding(16).frame(maxWidth: .infinity, minHeight: 125, alignment: .leading)
-                                            .background(Theme.cyan.opacity(0.14), in: RoundedRectangle(cornerRadius: 22))
+                            VStack(alignment: .leading, spacing: 20) {
+                                HStack {
+                                    Text("Mission").font(.title3)
+                                    Spacer()
+                                    Text("\(draft.missions.count) 种任务").foregroundStyle(Theme.cyan)
+                                }
+                                ForEach(draft.missions) { mission in
+                                    HStack(spacing: 14) {
+                                        Image(systemName: mission.kind.icon).foregroundStyle(mission.kind.tint).frame(width: 28)
+                                        Text(mission.kind.title).font(.callout)
+                                        Spacer()
+                                        Text("\(mission.target) 次").font(.caption).foregroundStyle(Theme.secondary)
                                     }
                                 }
                                 HStack {
-                                    Text("两题都答对才结束音乐").font(.caption).foregroundStyle(Theme.secondary)
+                                    Text("选择、排序与设置任务，全部完成后停止").font(.caption).foregroundStyle(Theme.secondary)
                                     Spacer(); Image(systemName: "chevron.right").font(.caption)
                                 }
                             }
@@ -230,7 +232,7 @@ struct AlarmEditorView: View {
                         }.buttonStyle(.plain).foregroundStyle(.white)
                     }
                     Toggle("保存后启用", isOn: $draft.isEnabled).tint(Theme.cyan)
-                    Text("iOS 系统仍提供停止入口。答题规则适用于 App 内播放，无法阻止强制退出、关机或撤销权限。")
+                    Text("iOS 系统仍提供停止入口。任务规则适用于 App 内播放，无法阻止强制退出、关机或撤销权限。")
                         .font(.caption).foregroundStyle(Theme.secondary).lineSpacing(4)
                 }.padding(.horizontal, 24).padding(.bottom, 20)
             }
@@ -251,7 +253,7 @@ struct AlarmEditorView: View {
                     }
                 }.padding(.horizontal, 24).padding(.vertical, 12).background(Theme.background)
             }
-            .sheet(isPresented: $showsQuizEditor) { QuizEditorView(questions: $draft.questions) }
+            .sheet(isPresented: $showsQuizEditor) { MissionEditorView(missions: $draft.missions, questions: $draft.questions) }
             .sheet(isPresented: $showsMusic) { SoundPickerView(sound: $draft.sound) }
             .alert("未能保存", isPresented: Binding(get: { localError != nil }, set: { if !$0 { localError = nil } })) {
                 Button("知道了") { localError = nil }
@@ -361,66 +363,6 @@ struct SoundPickerView: View {
     }
 }
 
-struct QuizView: View {
-    @Bindable var store: AppStore
-    @State private var answer = ""
-    @State private var feedback = ""
-    @FocusState private var answerFocused: Bool
-    var body: some View {
-        ScrollView {
-            if let challenge = store.challenge {
-                VStack(alignment: .leading, spacing: 28) {
-                    HStack {
-                        Text(challenge.isPreview ? "试响 · 答题体验" : "GOOD MORNING").font(.caption.weight(.bold)).tracking(3).foregroundStyle(Theme.cyan)
-                        Spacer(); Image(systemName: "waveform").foregroundStyle(Theme.cyan).symbolEffect(.variableColor.iterative)
-                    }.padding(.top, 24)
-                    Text(challenge.alarm.timeText).font(.system(size: 78, weight: .light, design: .rounded)).monospacedDigit()
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("让大脑先醒来。").font(.system(.largeTitle, design: .rounded, weight: .semibold))
-                        Text("答对两道题，音乐就会停止。").font(.callout).foregroundStyle(Theme.secondary)
-                    }
-                    HStack(spacing: 10) {
-                        ForEach(0..<2) { index in
-                            Capsule().fill(index < challenge.session.correctCount ? Theme.cyan : Theme.cyan.opacity(0.15)).frame(height: 5)
-                        }
-                    }
-                    Card {
-                        VStack(alignment: .leading, spacing: 24) {
-                            Text("QUIZ \(min(challenge.session.correctCount + 1, 2)) / 2").font(.caption.weight(.bold)).tracking(2).foregroundStyle(Theme.cyan)
-                            if let question = challenge.session.currentQuestion {
-                                Text(question.prompt).font(.system(.title, design: .rounded, weight: .medium)).fixedSize(horizontal: false, vertical: true)
-                                TextField("输入答案", text: $answer)
-                                    .font(.title2).padding(18).background(Theme.background, in: RoundedRectangle(cornerRadius: 16))
-                                    .textInputAutocapitalization(.never).autocorrectionDisabled().submitLabel(.go)
-                                    .focused($answerFocused).onSubmit { submit() }
-                                    .accessibilityLabel("第 \(challenge.session.correctCount + 1) 题答案")
-                                if !feedback.isEmpty { Text(feedback).font(.callout).foregroundStyle(Theme.coral).accessibilityLabel(feedback) }
-                            } else {
-                                Text("两题已答对").font(.title2)
-                                Text("若音频尚未停止，请点击下方重试。").foregroundStyle(Theme.secondary)
-                            }
-                        }
-                    }
-                    PrimaryButton(title: challenge.session.isComplete ? "重试停止音乐" : "提交答案  →") {
-                        if challenge.session.isComplete { store.finish() } else { submit() }
-                    }
-                    Label(challenge.alarm.sound.title, systemImage: "music.note").font(.caption).foregroundStyle(Theme.secondary)
-                }.padding(.horizontal, 24).padding(.bottom, 24)
-            }
-        }.background(Theme.background).scrollDismissesKeyboard(.interactively)
-            .onChange(of: store.challenge?.alarm.id) { _, _ in answer = ""; feedback = "" }
-    }
-
-    private func submit() {
-        let result = store.submit(answer)
-        switch result {
-        case .incorrect: feedback = "再想一想，音乐还在陪你。"; answer = ""
-        case .nextQuestion: feedback = ""; answer = ""; answerFocused = true
-        case .complete, .alreadyComplete: answer = ""; feedback = ""
-        }
-    }
-}
-
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     var body: some View {
@@ -431,14 +373,14 @@ struct SettingsView: View {
                     Card {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("先试一次，再设明天的闹钟").font(.headline)
-                            Text("点击闹钟上的「试响」，输入两题答案。然后设置 2 分钟后的闹钟，锁屏等待响起，点击「答题起床」进入 App。")
+                            Text("在闹钟的 Mission 中自由选择、排序和设置任务。先用「试响」逐项确认授权和识别，再设置 2 分钟后的闹钟，锁屏等待响起，点击「完成任务」进入 App。")
                                 .font(.callout).foregroundStyle(Theme.secondary)
                         }
                     }
                     Card {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("iPhone 使用说明").font(.headline)
-                            Text("支持 iOS 26 及以上，适配 iPhone 17 Pro Max 的安全区域和屏幕尺寸。允许系统闹钟权限后，锁屏提醒由 AlarmKit 调度。进入答题后播放本地音乐，可在后台继续。")
+                            Text("支持 iOS 26 及以上，适配 iPhone 17 Pro Max 的安全区域和屏幕尺寸。允许系统闹钟权限后，锁屏提醒由 AlarmKit 调度。进入任务后循环播放本地音乐；语音任务会降低音量，退出录音后恢复。相机、语音和动作验证需要在 App 前台进行。")
                                 .font(.callout).foregroundStyle(Theme.secondary)
                             Text("音量由 iPhone 控制。系统停止按钮、音量调节、电话、强制退出、关机和权限开关仍由 iOS 控制；本 App 无法禁止这些操作。")
                                 .font(.caption).foregroundStyle(Theme.secondary)
@@ -447,13 +389,13 @@ struct SettingsView: View {
                     Card {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("免费安装").font(.headline)
-                            Text("Windows 可以使用 AltStore Classic 安装构建后的 IPA。免费 Apple 账户签名有效期为 7 天，请在到期前刷新。安装说明随工程提供。")
+                            Text("已使用 SideStore 安装时，连接 Wi-Fi 和 LocalDevVPN，在 SideStore → My Apps 中刷新本 App 与 SideStore 自身。免费签名有效期为 7 天，建议每 5～6 天刷新一次；更新时导入新版 IPA 覆盖安装。")
                                 .font(.callout).foregroundStyle(Theme.secondary)
-                            Link("AltStore 官方安装说明 ↗", destination: URL(string: "https://faq.altstore.io/altstore-classic/how-to-install-altstore-windows")!)
+                            Link("SideStore 官方使用说明 ↗", destination: URL(string: "https://docs.sidestore.io/docs/installation/install")!)
                                 .foregroundStyle(Theme.cyan)
                         }
                     }
-                    Text("数据只保存在手机上。卸载 App 会删除题目、闹钟和导入的音乐。\n版本 1.0 · 首版需完成真机验证")
+                    Text("题目、条码、参考照片和音乐保存在手机上。图像与语音在本机识别。卸载 App 会删除数据。\n版本 1.1 · 组合起床任务")
                         .font(.caption).foregroundStyle(Theme.secondary)
                 }.padding(24)
             }.background(Theme.background)

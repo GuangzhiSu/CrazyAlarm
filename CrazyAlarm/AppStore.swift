@@ -4,8 +4,24 @@ import Observation
 
 struct ActiveChallenge: Codable, Equatable {
     var alarm: AlarmRecord
-    var session: QuizSession
+    var session: MissionSession
     var isPreview: Bool
+}
+
+extension ActiveChallenge {
+    private enum CodingKeys: String, CodingKey { case alarm, session, isPreview }
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        alarm = try values.decode(AlarmRecord.self, forKey: .alarm)
+        isPreview = try values.decode(Bool.self, forKey: .isPreview)
+        if let current = try? values.decode(MissionSession.self, forKey: .session) {
+            session = current
+        } else {
+            let legacy = try values.decode(QuizSession.self, forKey: .session)
+            session = try MissionSession(missions: alarm.missions, questions: alarm.questions)
+            session.restoreLegacyQuiz(legacy)
+        }
+    }
 }
 
 private struct SavedState: Codable {
@@ -109,6 +125,12 @@ final class AppStore {
         let previous = alarms.first(where: { $0.id == alarm.id })
         do {
             try alarm.validate()
+            for mission in alarm.missions where mission.kind == .photo {
+                guard let name = mission.referencePhoto,
+                      FileManager.default.fileExists(atPath: MissionImages.directory.appendingPathComponent(name).path) else {
+                    throw MissionError.missingReference
+                }
+            }
             for file in [alarm.sound.fileName, alarm.sound.alertFileName].compactMap({ $0 }) {
                 guard FileManager.default.fileExists(atPath: MusicPlayer.soundsDirectory.appendingPathComponent(file).path) else {
                     throw AlarmValidationError.missingSound
@@ -164,7 +186,7 @@ final class AppStore {
             return
         }
         do {
-            let session = try QuizSession(alarmID: alarm.id, questions: alarm.questions)
+            let session = try MissionSession(missions: alarm.missions, questions: alarm.questions)
             let next = ActiveChallenge(alarm: alarm, session: session, isPreview: preview)
             try persist(alarms: alarms, challenge: next, queue: queue)
             challenge = next
@@ -182,15 +204,37 @@ final class AppStore {
     }
 
     @discardableResult
-    func submit(_ answer: String) -> QuizSession.Result {
-        guard var next = challenge else { return .alreadyComplete }
-        let result = next.session.submit(answer)
+    func submit(_ answer: String) -> MissionSession.Result {
+        guard var next = challenge else { return .incorrect }
+        let result = next.session.submit(answer, questions: next.alarm.questions)
+        return commitProgress(next, result: result)
+    }
+
+    func selectTile(_ tile: Int) -> MissionSession.Result {
+        guard var next = challenge else { return .incorrect }
+        let result = next.session.selectTile(tile)
+        return commitProgress(next, result: result)
+    }
+
+    func recordEvidence(missionID: UUID, kind: MissionKind, count: Int = 1) {
+        guard var next = challenge else { return }
+        let result = next.session.recordEvidence(missionID: missionID, kind: kind, count: count)
+        guard result != .incorrect else { return }
+        _ = commitProgress(next, result: result)
+    }
+
+    private func commitProgress(_ next: ActiveChallenge, result: MissionSession.Result) -> MissionSession.Result {
         do {
             try persist(alarms: alarms, challenge: next, queue: queue)
             challenge = next
-            if result == .complete { finish() }
+            if result == .allComplete { finish() }
         } catch { errorMessage = error.localizedDescription; return .incorrect }
         return result
+    }
+
+    func setListening(_ listening: Bool) throws {
+        guard challenge != nil else { return }
+        try music.setListening(listening)
     }
 
     func finish() {
@@ -200,7 +244,7 @@ final class AppStore {
             try persist(alarms: alarms, challenge: nil, queue: queue)
             music.stop()
             self.challenge = nil
-            notice = "两题答对，早上好 ☀️"
+            notice = "所有任务已完成，早上好 ☀️"
             if let next = queue.first {
                 let remainder = Array(queue.dropFirst())
                 try persist(alarms: alarms, challenge: nil, queue: remainder)

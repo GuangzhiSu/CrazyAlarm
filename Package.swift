@@ -8,8 +8,9 @@ let package = Package(
     targets: [
         .target(name: "CrazyAlarmCore", path: "CrazyAlarm", exclude: [
             "CrazyAlarmApp.swift", "AppStore.swift", "AlarmScheduler.swift", "MusicPlayer.swift",
-            "Views.swift", "OpenQuizIntent.swift", "Info.plist", "Assets.xcassets", "Resources"
-        ], sources: ["Models.swift"]),
+            "Views.swift", "OpenQuizIntent.swift", "Info.plist", "Assets.xcassets", "Resources",
+            "MissionCamera.swift", "MissionChallenge.swift", "MissionEditor.swift", "MissionImages.swift", "MissionSensors.swift"
+        ], sources: ["Models.swift", "Missions.swift"]),
         .testTarget(name: "CrazyAlarmCoreTests", dependencies: ["CrazyAlarmCore"], path: "Tests")
     ]
 )
